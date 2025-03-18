@@ -3,7 +3,6 @@
 ### Prerequisites
 
 -  Go (v1.23+)
--  Docker (optional)
 -  Postgres instance (local or cloud)
 
 ### Project setup
@@ -48,7 +47,3 @@ $ make migrate-reset
 ## Authors
 
 -  [@biFebriansyah](https://www.github.com/biFebriansyah)
-
-## License
-
-[MIT](https://choosealicense.com/licenses/mit/)

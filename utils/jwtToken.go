@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 type jwtClaims struct {
@@ -22,17 +23,18 @@ func GenerateJwt(userId string) (string, error) {
 		},
 	}
 
-	secrets := os.Getenv("JWT_SECRETS")
+	secrets := os.Getenv("JWT_KEYS")
 	tokens := jwt.NewWithClaims(jwt.SigningMethodHS256, &claims)
 	return tokens.SignedString([]byte(secrets))
 }
 
 func ParseJwt(token string) (*jwtClaims, error) {
-	secrets := os.Getenv("JWT_SECRETS")
+	secrets := os.Getenv("JWT_KEYS")
 	jwtData, err := jwt.ParseWithClaims(token, &jwtClaims{}, func(t *jwt.Token) (interface{}, error) {
 		return []byte(secrets), nil
 	})
 	if err != nil {
+		fmt.Println(err)
 		return nil, fmt.Errorf("fail parse jwt: %w", err)
 	}
 

@@ -14,11 +14,17 @@ func NewHandler(r *TodoRepo) *TodoHandler {
 }
 
 func (h *TodoHandler) AddCard(ctx *fiber.Ctx) error {
+	var userId string
+	if userId = ctx.Locals("userId").(string); userId == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "please login")
+	}
+
 	body := new(Card)
 	if err := ctx.BodyParser(body); err != nil {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
+	body.UserId = userId
 	result, err := h.CreateCard(body)
 	if err != nil {
 		return err

@@ -1,6 +1,7 @@
 package todo
 
 import (
+	"encoding/json"
 	"fmt"
 
 	"github.com/gofiber/fiber/v2"
@@ -44,15 +45,35 @@ func (r *TodoRepo) GetCard(userId string) (*Cards, error) {
 		FROM public.cards c
 		WHERE c.user_id = $1`
 
-	var data = new(Cards)
-	if err := r.Get(data, q, userId); err != nil {
-		if err.Error() == "sql: no rows in result set" {
-			return nil, fiber.NewError(fiber.StatusNotFound, fmt.Sprintf("fail get cards: %s", err.Error()))
+	var datas = new(Cards)
+	if rows, err := r.Queryx(q, userId); err == nil {
+		for rows.Next() {
+			var data = new(Card)
+			var todolisJson []byte
+			err := rows.Scan(
+				&data.CardId,
+				&data.UserId,
+				&data.CardName,
+				&todolisJson,
+				&data.CreatedAt,
+				&data.UpdatedAt,
+			)
+			if err != nil {
+				fmt.Println(err)
+				return nil, err
+			}
+
+			if len(todolisJson) > 0 {
+				if err := json.Unmarshal(todolisJson, &data.TodoList); err != nil {
+					return nil, fmt.Errorf("failed to unmarshal music_artis: %w", err)
+				}
+			}
+
+			*datas = append(*datas, *data)
 		}
-		return nil, fiber.NewError(fiber.StatusBadGateway, fmt.Sprintf("fail get cards: %s", err.Error()))
 	}
 
-	return data, nil
+	return datas, nil
 }
 
 func (r *TodoRepo) DeleteCard(uid string) (int64, error) {
