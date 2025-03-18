@@ -21,7 +21,7 @@ func (r *UserHandler) SignIn(ctx *fiber.Ctx) error {
 		return fiber.NewError(fiber.StatusBadRequest, err.Error())
 	}
 
-	userData, err := r.GetByUsename(body.Usename)
+	userData, err := r.GetByUsename(body.Username)
 	if err != nil {
 		return err
 	}

@@ -1,17 +1,25 @@
 package todo
 
 import (
+	"github.com/biFebriansyah/bts-todoapp/middleware"
 	"github.com/gofiber/fiber/v2"
 	"github.com/jmoiron/sqlx"
 )
 
 func TodoRoute(app *fiber.App, db *sqlx.DB) {
-	genre := app.Group("/todo")
+	card := app.Group("/card")
+	todo := app.Group("/todo")
 
 	repos := NewRepo(db)
 	handler := NewHandler(repos)
 
-	genre.Get("/", handler.GetCards)
-	genre.Post("/", handler.AddCard)
+	//! cards
+	card.Get("/", middleware.AuthMiddleware, handler.GetCards)
+	card.Post("/", middleware.AuthMiddleware, handler.AddCard)
+
+	//! todolist
+	todo.Get("/", middleware.AuthMiddleware, handler.GetTodo)
+	todo.Post("/", middleware.AuthMiddleware, handler.AddTodo)
+
 	// genre.Delete("/:uuid", handler.Delete)
 }
