@@ -7,6 +7,7 @@ import (
 	"github.com/biFebriansyah/bts-todoapp/api/users"
 	"github.com/biFebriansyah/bts-todoapp/utils"
 	"github.com/gofiber/fiber/v2"
+	_ "github.com/joho/godotenv/autoload"
 )
 
 func main() {
