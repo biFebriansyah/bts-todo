@@ -92,11 +92,25 @@ func (r *TodoRepo) CreateTodo(body *Todo) (int64, error) {
 	return res.RowsAffected()
 }
 
-func (r *TodoRepo) GetTodos(userId string) (*[]Todo, error) {
-	q := `SELECT todo_id, card_id, todo_name, todo_status, created_at, updated_at FROM public.todos WHERE card_id = $1`
+func (r *TodoRepo) GetAllTodos(cardId string) (*[]Todo, error) {
+	q := `SELECT todo_id, card_id, todo_name, todo_status, created_at, updated_at FROM public.todos WHERE card_id = $1 `
 
 	var data = new([]Todo)
-	if err := r.Get(data, q, userId); err != nil {
+	if err := r.Select(data, q, cardId); err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, fiber.NewError(fiber.StatusNotFound, fmt.Sprintf("fail get cards: %s", err.Error()))
+		}
+		return nil, fiber.NewError(fiber.StatusBadGateway, fmt.Sprintf("fail get cards: %s", err.Error()))
+	}
+
+	return data, nil
+}
+
+func (r *TodoRepo) GetTodosById(cardId, todoId string) (*Todo, error) {
+	q := `SELECT todo_id, card_id, todo_name, todo_status, created_at, updated_at FROM public.todos WHERE card_id = $1 and todo_id = $2`
+
+	var data = new(Todo)
+	if err := r.Get(data, q, cardId, todoId); err != nil {
 		if err.Error() == "sql: no rows in result set" {
 			return nil, fiber.NewError(fiber.StatusNotFound, fmt.Sprintf("fail get cards: %s", err.Error()))
 		}
@@ -110,7 +124,7 @@ func (r *TodoRepo) UpdateTodo(body *Todo) (int64, error) {
 	q0 := `
 	UPDATE public.todos SET 
 		todo_name=COALESCE(NULLIF(:todo_name, ''), todo_name),
-		todo_status=COALESCE(NULLIF(:todo_status, ''), todo_status),
+		todo_status=COALESCE(NULLIF(:todo_status, :todo_status), todo_status),
 		updated_at=now()
 	WHERE todo_id = :todo_id;`
 
@@ -122,7 +136,27 @@ func (r *TodoRepo) UpdateTodo(body *Todo) (int64, error) {
 	return res.RowsAffected()
 }
 
-func (r *TodoRepo) DeleteTodo(uid string) (int64, error) {
+func (r *TodoRepo) UpdateTodoStatus(body *Todo) (int64, error) {
+	q0 := `UPDATE public.todos SET todo_status=true, updated_at=now() WHERE todo_id = :todo_id`
+	res, err := r.NamedExec(q0, body)
+	if err != nil {
+		return 1, fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("fail update todos: %s", err.Error()))
+	}
+
+	return res.RowsAffected()
+}
+
+func (r *TodoRepo) UpdateTodoName(body *Todo) (int64, error) {
+	q0 := `UPDATE public.todos SET todo_name=:todo_name, updated_at=now() WHERE todo_id = :todo_id`
+	res, err := r.NamedExec(q0, body)
+	if err != nil {
+		return 1, fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("fail update todos: %s", err.Error()))
+	}
+
+	return res.RowsAffected()
+}
+
+func (r *TodoRepo) DeleteTodoItem(uid string) (int64, error) {
 	q := `DELETE FROM public.todos WHERE todo_id = $1;`
 	res := r.MustExec(q, uid)
 	return res.RowsAffected()

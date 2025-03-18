@@ -6,12 +6,10 @@ import (
 )
 
 func UserRoute(app *fiber.App, db *sqlx.DB) {
-	auth := app.Group("/auth")
 
 	repos := NewRepo(db)
 	handler := NewHandler(repos)
 
-	auth.Post("/signin", handler.SignIn)
-	auth.Post("/signup", handler.SignUp)
-	// genre.Delete("/:uuid", handler.Delete)
+	app.Post("/login", handler.SignIn)
+	app.Post("/register", handler.SignUp)
 }
