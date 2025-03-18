@@ -29,7 +29,7 @@ func (h *TodoHandler) AddCard(ctx *fiber.Ctx) error {
 
 func (h *TodoHandler) GetCards(ctx *fiber.Ctx) error {
 	var userId string
-	if userId = ctx.Locals("image").(string); userId == "" {
+	if userId = ctx.Locals("userId").(string); userId == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "please login")
 	}
 	result, err := h.GetCard(userId)
@@ -66,7 +66,7 @@ func (h *TodoHandler) AddTodo(ctx *fiber.Ctx) error {
 
 func (h *TodoHandler) GetTodo(ctx *fiber.Ctx) error {
 	var userId string
-	if userId = ctx.Locals("image").(string); userId == "" {
+	if userId = ctx.Locals("userId").(string); userId == "" {
 		return fiber.NewError(fiber.StatusBadRequest, "please login")
 	}
 

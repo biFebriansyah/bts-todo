@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/biFebriansyah/bts-todoapp/utils"
@@ -12,6 +13,8 @@ func AuthMiddleware(ctx *fiber.Ctx) error {
 	if len(headers) <= 0 {
 		return fiber.NewError(fiber.StatusUnauthorized, "need login")
 	}
+
+	fmt.Println("masukk")
 
 	tokens := strings.Replace(headers[0], "Bearer ", "", 1)
 	claims, err := utils.ParseJwt(tokens)
