@@ -16,6 +16,7 @@ func TodoRoute(app *fiber.App, db *sqlx.DB) {
 	//! cards
 	card.Get("/", middleware.AuthMiddleware, handler.GetCards)
 	card.Post("/", middleware.AuthMiddleware, handler.AddCard)
+	card.Delete("/:uid", middleware.AuthMiddleware, handler.DeleteCards)
 
 	//! todolist
 	todo.Get("/", middleware.AuthMiddleware, handler.GetTodo)

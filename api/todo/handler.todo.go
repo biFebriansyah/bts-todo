@@ -47,7 +47,12 @@ func (h *TodoHandler) GetCards(ctx *fiber.Ctx) error {
 }
 
 func (h *TodoHandler) DeleteCards(ctx *fiber.Ctx) error {
-	uid := fiberutil.CopyString(ctx.Params("uuid"))
+	var userId string
+	if userId = ctx.Locals("userId").(string); userId == "" {
+		return fiber.NewError(fiber.StatusBadRequest, "please login")
+	}
+
+	uid := fiberutil.CopyString(ctx.Params("uid"))
 	result, err := h.DeleteCard(uid)
 	if err != nil {
 		return err

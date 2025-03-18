@@ -32,11 +32,11 @@ func (r *TodoRepo) GetCard(userId string) (*Cards, error) {
 		c.user_id, 
 		c.card_name,
 		(SELECT 
-			JSONB_BUILD_OBJECT(
+			JSONB_AGG(JSONB_BUILD_OBJECT(
 				'todo_id', t.todo_id,
 				'todo_name', t.todo_name,
 				'todo_status', t.todo_status
-			)
+			))
 			FROM public.todos t
 			WHERE c.card_id = t.card_id 
 		) AS todo_list, 
