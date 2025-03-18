@@ -11,6 +11,10 @@ type UserHandler struct {
 	*UserRepo
 }
 
+func NewHandler(r *UserRepo) *UserHandler {
+	return &UserHandler{r}
+}
+
 func (r *UserHandler) SignIn(ctx *fiber.Ctx) error {
 	body := new(User)
 	if err := ctx.BodyParser(body); err != nil {

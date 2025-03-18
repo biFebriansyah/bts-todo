@@ -11,6 +11,10 @@ type TodoRepo struct {
 	*sqlx.DB
 }
 
+func NewRepo(db *sqlx.DB) *TodoRepo {
+	return &TodoRepo{db}
+}
+
 func (r *TodoRepo) CreateCard(body *Card) (int64, error) {
 	q0 := `INSERT INTO public.cards (user_id, card_name) VALUES(:user_id, :card_name)`
 	res, err := r.NamedExec(q0, body)

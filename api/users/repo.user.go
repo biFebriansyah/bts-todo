@@ -11,6 +11,10 @@ type UserRepo struct {
 	*sqlx.DB
 }
 
+func NewRepo(db *sqlx.DB) *UserRepo {
+	return &UserRepo{db}
+}
+
 func (r *UserRepo) CreateUser(body *User) (int64, error) {
 	q0 := `INSERT INTO public.users (username, email, "password") VALUES(:username, :email, :password);`
 	res, err := r.NamedExec(q0, body)
