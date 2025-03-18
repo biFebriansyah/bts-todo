@@ -12,11 +12,93 @@ type TodoRepo struct {
 }
 
 func (r *TodoRepo) CreateCard(body *Card) (int64, error) {
-	q0 := `INSERT INTO public.card (name) VALUES(:name)`
+	q0 := `INSERT INTO public.cards (user_id, card_name) VALUES(:user_id, :card_name)`
 	res, err := r.NamedExec(q0, body)
 	if err != nil {
-		return 1, fiber.NewError(402, fmt.Sprintf("fail create card: %s", err.Error()))
+		return 1, fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("fail create card: %s", err.Error()))
 	}
 
+	return res.RowsAffected()
+}
+
+func (r *TodoRepo) GetCard(userId string) (*Cards, error) {
+	q := `SELECT 
+		c.card_id, 
+		c.user_id, 
+		c.card_name,
+		(SELECT 
+			JSONB_BUILD_OBJECT(
+				'todo_id', t.todo_id,
+				'todo_name', t.todo_name,
+				'todo_status', t.todo_status
+			)
+			FROM public.todos t
+			WHERE c.card_id = t.card_id 
+		) AS todo_list, 
+		c.created_at, 
+		c.updated_at
+		FROM public.cards c
+		WHERE c.user_id = $1`
+
+	var data = new(Cards)
+	if err := r.Get(data, q, userId); err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, fiber.NewError(fiber.StatusNotFound, fmt.Sprintf("fail get cards: %s", err.Error()))
+		}
+		return nil, fiber.NewError(fiber.StatusBadGateway, fmt.Sprintf("fail get cards: %s", err.Error()))
+	}
+
+	return data, nil
+}
+
+func (r *TodoRepo) DeleteCard(uid string) (int64, error) {
+	q := `DELETE FROM public.cards WHERE card_id = $1;`
+	res := r.MustExec(q, uid)
+	return res.RowsAffected()
+}
+
+func (r *TodoRepo) CreateTodo(body *Todo) (int64, error) {
+	q0 := `INSERT INTO public.todos(card_id, todo_name, todo_status) VALUES(:card_id, :todo_name, :todo_status);`
+	res, err := r.NamedExec(q0, body)
+	if err != nil {
+		return 1, fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("fail create todos: %s", err.Error()))
+	}
+
+	return res.RowsAffected()
+}
+
+func (r *TodoRepo) GetTodos(userId string) (*[]Todo, error) {
+	q := `SELECT todo_id, card_id, todo_name, todo_status, created_at, updated_at FROM public.todos WHERE card_id = $1`
+
+	var data = new([]Todo)
+	if err := r.Get(data, q, userId); err != nil {
+		if err.Error() == "sql: no rows in result set" {
+			return nil, fiber.NewError(fiber.StatusNotFound, fmt.Sprintf("fail get cards: %s", err.Error()))
+		}
+		return nil, fiber.NewError(fiber.StatusBadGateway, fmt.Sprintf("fail get cards: %s", err.Error()))
+	}
+
+	return data, nil
+}
+
+func (r *TodoRepo) UpdateTodo(body *Todo) (int64, error) {
+	q0 := `
+	UPDATE public.todos SET 
+		todo_name=COALESCE(NULLIF(:todo_name, ''), todo_name),
+		todo_status=COALESCE(NULLIF(:todo_status, ''), todo_status),
+		updated_at=now()
+	WHERE todo_id = :todo_id;`
+
+	res, err := r.NamedExec(q0, body)
+	if err != nil {
+		return 1, fiber.NewError(fiber.StatusBadRequest, fmt.Sprintf("fail update todos: %s", err.Error()))
+	}
+
+	return res.RowsAffected()
+}
+
+func (r *TodoRepo) DeleteTodo(uid string) (int64, error) {
+	q := `DELETE FROM public.todos WHERE todo_id = $1;`
+	res := r.MustExec(q, uid)
 	return res.RowsAffected()
 }
